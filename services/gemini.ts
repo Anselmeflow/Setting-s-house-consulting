@@ -1,14 +1,10 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { AppData } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
-
 // Public AI Agent
 export const generateAIResponse = async (history: {role: string, text: string}[], userMessage: string): Promise<string> => {
-    if (!process.env.API_KEY) {
-        return "Je suis désolé, je ne peux pas répondre pour le moment (Clé API manquante).";
-    }
+    // API Key must be obtained exclusively from process.env.API_KEY
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     try {
         const systemInstruction = `
@@ -65,7 +61,7 @@ export const generateAIResponse = async (history: {role: string, text: string}[]
         return response.text || "Désolé, je n'ai pas compris.";
     } catch (error) {
         console.error("Gemini Error:", error);
-        return "Une erreur est survenue lors du traitement de votre demande.";
+        return "Une erreur technique est survenue (Vérifiez la validité de la clé API).";
     }
 };
 
@@ -75,9 +71,8 @@ export const generateAdminAIResponse = async (
     userMessage: string, 
     appData: AppData
 ): Promise<string> => {
-    if (!process.env.API_KEY) {
-        return "Erreur clé API.";
-    }
+    // API Key must be obtained exclusively from process.env.API_KEY
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     try {
         const systemInstruction = `

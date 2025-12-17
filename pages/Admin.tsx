@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useData } from '../context/DataContext';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Users, Folder, MessageSquare, LayoutGrid, Save, Shield, UserPlus, LogOut, Check, X, Lock, Bot, Database, Send, Loader2, FileSpreadsheet, Plus, Trash2, Image as ImageIcon, Calendar, Mail, FileText, HardDrive } from 'lucide-react';
+import { ArrowLeft, Users, Folder, MessageSquare, LayoutGrid, Shield, UserPlus, LogOut, Check, X, Lock, Bot, Database, Send, Loader2, FileSpreadsheet, Plus, Trash2, Image as ImageIcon, Calendar, Mail, FileText, HardDrive, Settings, Key, AlertCircle } from 'lucide-react';
 import { CONTACT_INFO } from '../constants';
 import { generateAdminAIResponse } from '../services/gemini';
 import { ChatMessage, TeamMember, Service, Project } from '../types';
@@ -89,7 +88,7 @@ const Admin: React.FC = () => {
       setEmail('');
       setPassword('');
   }
-
+  
   const handleConnectWorkspace = () => {
       // Simulate Connection
       setIsWorkspaceConnected(true);
@@ -286,14 +285,12 @@ const Admin: React.FC = () => {
         </nav>
         
         <div className="p-4 border-t border-gray-800 space-y-2">
-             {isAdmin && (
-                 <button 
-                    onClick={() => setActiveTab('settings')}
-                    className={`w-full flex items-center text-xs p-2 rounded transition ${activeTab === 'settings' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}
-                 >
-                     <UserPlus size={14} className="mr-2" /> Gérer les Admins
-                 </button>
-             )}
+             <button 
+                onClick={() => setActiveTab('settings')}
+                className={`w-full flex items-center text-xs p-2 rounded transition ${activeTab === 'settings' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}
+             >
+                 <Settings size={14} className="mr-2" /> Paramètres
+             </button>
             <button onClick={handleLogout} className="w-full flex items-center text-xs p-2 text-red-400 hover:bg-red-900/20 hover:text-red-300 transition rounded">
                  <LogOut size={14} className="mr-2" /> Déconnexion
             </button>
@@ -305,7 +302,7 @@ const Admin: React.FC = () => {
         <header className="flex justify-between items-center mb-8 shrink-0">
             <div>
                 <h1 className="text-3xl font-bold text-gray-800 capitalize font-heading flex items-center">
-                    {activeTab === 'services' ? 'Catalogue & Services' : activeTab === 'ai_assistant' ? 'Assistant Manager IA' : activeTab}
+                    {activeTab === 'services' ? 'Catalogue & Services' : activeTab === 'ai_assistant' ? 'Assistant Manager IA' : activeTab === 'settings' ? 'Paramètres & Admin' : activeTab}
                     {activeTab === 'ai_assistant' && <span className="ml-3 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded border border-purple-200">Connecté</span>}
                 </h1>
                 <p className="text-sm text-gray-500 mt-1">
@@ -684,47 +681,72 @@ const Admin: React.FC = () => {
              </div>
         )}
 
-        {/* Settings Tab (Super Admin Only) */}
-        {activeTab === 'settings' && isAdmin && (
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 animate-fade-in">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <UserPlus className="mr-2" /> Gestion des Administrateurs
-                </h3>
-                <p className="text-sm text-gray-500 mb-6">
-                    En tant que Super Admin ({CONTACT_INFO.adminEmail}), vous seul pouvez nommer de nouveaux administrateurs.
-                </p>
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+            <div className="space-y-6 animate-fade-in pb-10">
                 
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6">
-                    <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                            <Shield className="h-5 w-5 text-shc-blue" />
-                        </div>
-                        <div className="ml-3">
-                            <h3 className="text-sm font-medium text-blue-800">Admin Principal</h3>
-                            <div className="mt-2 text-sm text-blue-700">
-                                <p>{CONTACT_INFO.adminEmail}</p>
-                            </div>
+                {/* AI Configuration Section - Read Only */}
+                <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                     <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                        <Key className="mr-2 text-shc-orange" /> Configuration Intelligence Artificielle
+                    </h3>
+                    
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex items-start">
+                        <AlertCircle className="text-shc-blue mt-1 mr-3 flex-shrink-0" size={20} />
+                        <div>
+                            <h4 className="font-bold text-blue-900 text-sm">Gestion de la Clé API</h4>
+                            <p className="text-xs text-blue-700 mt-1">
+                                Pour des raisons de sécurité, la clé API Google Gemini est désormais gérée directement via les variables d'environnement de Vercel (Cloud). 
+                                <br />
+                                <strong>Statut :</strong> {process.env.API_KEY ? '✅ Clé API Détectée (Active)' : '❌ Clé API Non Détectée'}
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <div className="border-t border-gray-100 pt-6">
-                    <h4 className="font-bold text-sm text-gray-700 mb-4">Ajouter un collaborateur</h4>
-                    <div className="flex gap-4">
-                        <input 
-                            type="email" 
-                            placeholder="Email du nouvel admin" 
-                            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-shc-blue outline-none"
-                        />
-                         <select className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-shc-blue outline-none">
-                             <option value="editor">Admin (Accès contenu)</option>
-                         </select>
-                        <button className="bg-shc-dark text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800">
-                            Donner Accès
-                        </button>
+                {/* Super Admin Section */}
+                {isAdmin && (
+                    <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                            <UserPlus className="mr-2" /> Gestion des Administrateurs
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-6">
+                            En tant que Super Admin ({CONTACT_INFO.adminEmail}), vous seul pouvez nommer de nouveaux administrateurs.
+                        </p>
+                        
+                        <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 mb-6">
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0">
+                                    <Shield className="h-5 w-5 text-shc-blue" />
+                                </div>
+                                <div className="ml-3">
+                                    <h3 className="text-sm font-medium text-gray-800">Admin Principal</h3>
+                                    <div className="mt-2 text-sm text-gray-600">
+                                        <p>{CONTACT_INFO.adminEmail}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-gray-100 pt-6">
+                            <h4 className="font-bold text-sm text-gray-700 mb-4">Ajouter un collaborateur</h4>
+                            <div className="flex gap-4">
+                                <input 
+                                    type="email" 
+                                    placeholder="Email du nouvel admin" 
+                                    className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-shc-blue outline-none"
+                                />
+                                <select className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-shc-blue outline-none">
+                                    <option value="editor">Admin (Accès contenu)</option>
+                                </select>
+                                <button className="bg-shc-dark text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800">
+                                    Donner Accès
+                                </button>
+                            </div>
+                            <p className="text-xs text-gray-400 mt-2 italic">L'utilisateur pourra se connecter avec le mot de passe Manager.</p>
+                        </div>
                     </div>
-                    <p className="text-xs text-gray-400 mt-2 italic">L'utilisateur pourra se connecter avec le mot de passe Manager.</p>
-                </div>
+                )}
             </div>
         )}
       </main>
