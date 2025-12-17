@@ -6,7 +6,7 @@ import { CONTACT_INFO } from '../constants';
 import { generateAdminAIResponse } from '../services/gemini';
 import { ChatMessage, TeamMember, Service, Project } from '../types';
 
-// Simple mock for session persistence
+// Simple mock for session persistence with token validation
 const SESSION_KEY = 'shc_admin_session';
 const MANAGER_PASSWORD = '@anselme2005';
 
@@ -35,15 +35,37 @@ const Admin: React.FC = () => {
   // Mock Google Sheets Connection State
   const [isWorkspaceConnected, setIsWorkspaceConnected] = useState(false);
 
+  // VALIDATION DE SESSION SECURISEE
   useEffect(() => {
       const savedSession = localStorage.getItem(SESSION_KEY);
       if (savedSession) {
-          const session = JSON.parse(savedSession);
-          // Re-verify super admin status on reload
-          if (session.email.trim().toLowerCase() === CONTACT_INFO.adminEmail.toLowerCase()) {
-              setIsAdmin(true);
+          try {
+              const session = JSON.parse(savedSession);
+              // Vérification du token pour éviter l'usurpation simple via localStorage
+              if (session.token) {
+                  const decoded = atob(session.token);
+                  const [sessEmail, sessPass, sessTime] = decoded.split('|');
+                  
+                  // Validation: Mot de passe correct ET session de moins de 24h
+                  const isValid = sessPass === MANAGER_PASSWORD && 
+                                  (Date.now() - Number(sessTime)) < 86400000; // 24 heures
+
+                  if (isValid) {
+                      setIsAuthenticated(true);
+                      setEmail(sessEmail);
+                      if (sessEmail.trim().toLowerCase() === CONTACT_INFO.adminEmail.toLowerCase()) {
+                          setIsAdmin(true);
+                      }
+                  } else {
+                      // Session invalide ou expirée
+                      console.warn("Session expirée ou invalide");
+                      localStorage.removeItem(SESSION_KEY);
+                  }
+              }
+          } catch (e) {
+              console.error("Erreur de validation session", e);
+              localStorage.removeItem(SESSION_KEY);
           }
-          setIsAuthenticated(true);
       }
   }, []);
 
@@ -68,14 +90,25 @@ const Admin: React.FC = () => {
     if (password === MANAGER_PASSWORD) { 
       setIsAuthenticated(true);
       
+      // Génération d'un token simple pour valider la session
+      // Format: email|password|timestamp (encodé en base64)
+      const token = btoa(`${email}|${password}|${Date.now()}`);
+      
+      let role = 'admin';
       // Check if Super Admin
       if (email.trim().toLowerCase() === CONTACT_INFO.adminEmail.toLowerCase()) {
           setIsAdmin(true);
-          localStorage.setItem(SESSION_KEY, JSON.stringify({ email: email, role: 'super_admin', timestamp: Date.now() }));
+          role = 'super_admin';
       } else {
           setIsAdmin(false);
-          localStorage.setItem(SESSION_KEY, JSON.stringify({ email: email, role: 'admin', timestamp: Date.now() }));
       }
+      
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ 
+          email: email, 
+          role: role, 
+          token: token 
+      }));
+
     } else {
       setLoginError('Mot de passe incorrect');
     }
